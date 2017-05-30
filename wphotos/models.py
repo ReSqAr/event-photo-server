@@ -1,4 +1,5 @@
 import os
+import hashlib
 from io import BytesIO
 from typing import Tuple
 
@@ -8,6 +9,7 @@ from django.core.files.base import ContentFile
 from django.db import models
 from django.db.models import FileField
 from django.db.models.fields.files import FieldFile
+from rest_framework.exceptions import ValidationError
 
 from wserver.settings import THUMBNAIL_SIZE, WEB_PHOTO_SIZE
 
@@ -16,6 +18,7 @@ class Photo(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='photos')
     dt = models.DateTimeField()
     photo = FileField(upload_to='photos')
+    hash_md5 = models.CharField(max_length=200)
     thumbnail = FileField(upload_to='thumbnail', null=True)
     web_photo = FileField(upload_to='web_photo', null=True)
 
@@ -23,6 +26,12 @@ class Photo(models.Model):
         ordering = ['-dt']
 
     def save(self, *args, **kwargs):
+        # check md5sum
+        self.photo.seek(0)
+        local_md5 = self.compute_md5(self.photo)
+        if self.hash_md5.strip() != local_md5:
+            raise ValidationError('md5 mismatch: {} != {}'.format(self.hash_md5, local_md5))
+        self.photo.seek(0)
 
         # try to create a thumbnail
         self.save_scaled_version(source=self.photo, size=THUMBNAIL_SIZE, prefix='_thumbnail', target=self.thumbnail)
@@ -31,6 +40,13 @@ class Photo(models.Model):
         self.save_scaled_version(source=self.photo, size=WEB_PHOTO_SIZE, prefix='_web', target=self.web_photo)
 
         super(Photo, self).save(*args, **kwargs)
+
+    @staticmethod
+    def compute_md5(f: FileField) -> str:
+        hash_md5 = hashlib.md5()
+        for chunk in iter(lambda: f.read(4096), b''):
+            hash_md5.update(chunk)
+        return hash_md5.hexdigest()
 
     @staticmethod
     def save_scaled_version(source: FieldFile, size: Tuple[int, int], prefix: str, target: FieldFile) -> bool:
@@ -45,17 +61,17 @@ class Photo(models.Model):
         scaled_filename = source_name + prefix + source_extension
 
         if source_extension in ['.jpg', '.jpeg']:
-            FTYPE = 'JPEG'
+            file_type = 'JPEG'
         elif source_extension == '.gif':
-            FTYPE = 'GIF'
+            file_type = 'GIF'
         elif source_extension == '.png':
-            FTYPE = 'PNG'
+            file_type = 'PNG'
         else:
             return False  # Unrecognized file type
 
         # Save thumbnail to in-memory file as BytesIO
         temp_scaled = BytesIO()
-        image.save(temp_scaled, FTYPE)
+        image.save(temp_scaled, file_type)
         temp_scaled.seek(0)
 
         # set save=False, otherwise it will run in an infinite loop
