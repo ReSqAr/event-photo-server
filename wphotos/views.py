@@ -2,9 +2,9 @@ from django.shortcuts import render
 from django.contrib.auth.models import User, Group
 from rest_framework import viewsets
 
-from wphotos.models import Wedding, Photo, Comment
+from wphotos.models import Photo, Comment
 from wphotos.permissions import IsOwnerOrReadOnly, IsUserOrReadOnly
-from wphotos.serializers import UserSerializer, WeddingSerializer, PhotoSerializer, CommentSerializer
+from wphotos.serializers import UserSerializer, PhotoSerializer, CommentSerializer
 
 
 # Create your views here.
@@ -18,14 +18,6 @@ class UserViewSet(viewsets.ModelViewSet):
 
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
-
-
-class WeddingViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows weddings to be viewed or edited.
-    """
-    queryset = Wedding.objects.all()
-    serializer_class = WeddingSerializer
 
 
 class PhotoViewSet(viewsets.ModelViewSet):

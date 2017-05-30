@@ -12,18 +12,8 @@ from django.db.models.fields.files import FieldFile
 from wserver.settings import THUMBNAIL_SIZE, WEB_PHOTO_SIZE
 
 
-class Wedding(models.Model):
-    name = models.CharField(max_length=50)
-    description = models.CharField(max_length=200)
-    #secret = models.CharField(max_length=200)
-
-    def __str__(self):
-        return '{} ({})'.format(self.name, self.id)
-
-
 class Photo(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='photos')
-    wedding = models.ForeignKey(Wedding, on_delete=models.CASCADE, related_name='photos')
     dt = models.DateTimeField()
     photo = FileField(upload_to='photos')
     thumbnail = FileField(upload_to='thumbnail', null=True)
@@ -43,7 +33,7 @@ class Photo(models.Model):
         super(Photo, self).save(*args, **kwargs)
 
     @staticmethod
-    def save_scaled_version(source: FieldFile, size : Tuple[int, int], prefix : str, target: FieldFile) -> bool:
+    def save_scaled_version(source: FieldFile, size: Tuple[int, int], prefix: str, target: FieldFile) -> bool:
         """
         from: https://stackoverflow.com/a/43011898/7729124
         """

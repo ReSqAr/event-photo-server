@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from wphotos.models import Wedding, Photo, Comment
+from wphotos.models import Photo, Comment
 
 
 class CommentSerializer(serializers.HyperlinkedModelSerializer):
@@ -20,7 +20,7 @@ class PhotoSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Photo
-        fields = ('url', 'wedding', 'owner', 'owner_name', 'dt', 'photo', 'thumbnail', 'web_photo', 'comments')
+        fields = ('url', 'owner', 'owner_name', 'dt', 'photo', 'thumbnail', 'web_photo', 'comments')
         read_only_fields = ('owner', 'thumbnail', 'web_photo')
 
 
@@ -30,13 +30,4 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = User
         fields = ('url', 'username', 'photos')
-        depth = 1
-
-
-class WeddingSerializer(serializers.HyperlinkedModelSerializer):
-    photos = PhotoSerializer(many=True,read_only=True)
-
-    class Meta:
-        model = Wedding
-        fields = ('url', 'name', 'description', 'photos')
         depth = 1

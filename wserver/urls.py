@@ -22,7 +22,6 @@ from wserver import settings
 
 router = routers.DefaultRouter()
 router.register(r'users', views.UserViewSet)
-router.register(r'weddings', views.WeddingViewSet)
 router.register(r'photos', views.PhotoViewSet)
 router.register(r'comments', views.CommentViewSet)
 
