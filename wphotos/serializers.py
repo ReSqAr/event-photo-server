@@ -9,8 +9,8 @@ class CommentSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ('url', 'owner', 'owner_name', 'parent', 'photo', 'dt', 'text')
-        read_only_fields = ('owner', )#'parent', 'photo',)
+        fields = ('id', 'url', 'owner', 'owner_name', 'parent', 'photo', 'dt', 'text')
+        read_only_fields = ('id', 'owner',)  # 'parent', 'photo',)
 
 
 class PhotoSerializer(serializers.HyperlinkedModelSerializer):
@@ -19,8 +19,10 @@ class PhotoSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Photo
-        fields = ('url', 'owner', 'owner_name', 'dt', 'photo', 'hash_md5', 'thumbnail', 'web_photo', 'comments')
-        read_only_fields = ('owner', 'thumbnail', 'web_photo')
+        fields = (
+        'id', 'url', 'owner', 'owner_name', 'dt', 'photo', 'hash_md5', 'thumbnail', 'web_photo', 'owner_comment',
+        'comments')
+        read_only_fields = ('id', 'owner', 'thumbnail', 'web_photo')
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -28,5 +30,5 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = User
-        fields = ('url', 'username', 'photos')
+        fields = ('id', 'url', 'username', 'photos')
         depth = 1

@@ -1,5 +1,5 @@
-import os
 import hashlib
+import os
 from io import BytesIO
 from typing import Tuple
 
@@ -21,6 +21,7 @@ class Photo(models.Model):
     hash_md5 = models.CharField(max_length=200)
     thumbnail = FileField(upload_to='thumbnail', null=True)
     web_photo = FileField(upload_to='web_photo', null=True)
+    owner_comment = models.CharField(max_length=500)
 
     class Meta:
         ordering = ['-dt']
@@ -89,7 +90,7 @@ class Comment(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True)
     dt = models.DateTimeField()
-    text = models.CharField(max_length=200)
+    text = models.CharField(max_length=500)
 
     class Meta:
         ordering = ['-dt']
