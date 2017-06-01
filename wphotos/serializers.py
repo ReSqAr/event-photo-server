@@ -10,7 +10,7 @@ class CommentSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Comment
         fields = ('url', 'owner', 'owner_name', 'parent', 'photo', 'dt', 'text')
-        read_only_fields = ('owner', 'parent', 'photo',)
+        read_only_fields = ('owner', )#'parent', 'photo',)
 
 
 class PhotoSerializer(serializers.HyperlinkedModelSerializer):
