@@ -1,5 +1,6 @@
 import hashlib
 import os
+import datetime
 from io import BytesIO
 from typing import Tuple
 
@@ -7,21 +8,33 @@ from PIL import Image
 from django.contrib.auth.models import User
 from django.core.files.base import ContentFile
 from django.db import models
-from django.db.models import FileField
+from django.conf import settings
+from django.db.models import FileField, BooleanField
 from django.db.models.fields.files import FieldFile
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from rest_framework.exceptions import ValidationError
+from rest_framework.authtoken.models import Token
 
 from wserver.settings import THUMBNAIL_SIZE, WEB_PHOTO_SIZE
+
+
+# from: http://www.django-rest-framework.org/api-guide/authentication/
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def create_auth_token(sender, instance=None, created=False, **kwargs):
+    if created:
+        Token.objects.create(user=instance)
 
 
 class Photo(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='photos')
     dt = models.DateTimeField()
+    visible = BooleanField(default=False)
     photo = FileField(upload_to='photos')
     hash_md5 = models.CharField(max_length=200)
     thumbnail = FileField(upload_to='thumbnail', null=True)
     web_photo = FileField(upload_to='web_photo', null=True)
-    owner_comment = models.CharField(max_length=500)
+    owner_comment = models.CharField(max_length=500,blank=True)
 
     class Meta:
         ordering = ['-dt']
@@ -39,6 +52,13 @@ class Photo(models.Model):
 
         # try to create a scaled version for web
         self.save_scaled_version(source=self.photo, size=WEB_PHOTO_SIZE, prefix='_web', target=self.web_photo)
+
+        # find creation date
+        image = Image.open(self.photo)
+        try:
+            self.dt = image._getexif()[36867]
+        except:
+            self.dt = datetime.datetime.now()
 
         super(Photo, self).save(*args, **kwargs)
 

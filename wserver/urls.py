@@ -19,16 +19,20 @@ from django.contrib import admin
 from rest_framework import routers
 from wphotos import views
 from wserver import settings
+from rest_framework.authtoken import views as rest_views
 
 router = routers.DefaultRouter()
 router.register(r'users', views.UserViewSet)
 router.register(r'photos', views.PhotoViewSet)
+router.register(r'visiblephotos', views.PhotoVisibleViewSet)
 router.register(r'comments', views.CommentViewSet)
 
 urlpatterns = [
 #    url(r'^admin/', admin.site.urls),
     url(r'^', include(router.urls)),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    url(r'^api-token-auth/', rest_views.obtain_auth_token),
+    url(r'^information/',views.server_information),
 ]
 
 if settings.DEBUG:

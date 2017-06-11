@@ -23,6 +23,8 @@ MEDIA_URL = '/media/'
 THUMBNAIL_SIZE = (256,256)
 WEB_PHOTO_SIZE = (1024,1024)
 
+LOCAL_NODE = ""
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
@@ -47,6 +49,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'wphotos.apps.WphotosConfig',
     'rest_framework',
+    'rest_framework.authtoken',
 ]
 
 REST_FRAMEWORK = {
@@ -54,6 +57,10 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
     'DEFAULT_PAGINATION_CLASS': 'wserver.pagination.UserControlledPagination',
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    )
 }
 
 MIDDLEWARE = [

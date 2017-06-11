@@ -16,13 +16,14 @@ class CommentSerializer(serializers.HyperlinkedModelSerializer):
 class PhotoSerializer(serializers.HyperlinkedModelSerializer):
     comments = CommentSerializer(many=True, read_only=True)
     owner_name = serializers.ReadOnlyField(source='owner.username')
+    owner_comment = serializers.CharField(allow_blank=True)
 
     class Meta:
         model = Photo
         fields = (
-        'id', 'url', 'owner', 'owner_name', 'dt', 'photo', 'hash_md5', 'thumbnail', 'web_photo', 'owner_comment',
+        'id', 'url', 'owner', 'owner_name', 'dt', 'visible', 'photo', 'hash_md5', 'thumbnail', 'web_photo', 'owner_comment',
         'comments')
-        read_only_fields = ('id', 'owner', 'thumbnail', 'web_photo')
+        read_only_fields = ('id', 'owner', 'thumbnail', 'web_photo', 'dt')
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
