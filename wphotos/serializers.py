@@ -5,7 +5,7 @@ from wphotos.models import Photo, Comment
 
 
 class CommentSerializer(serializers.HyperlinkedModelSerializer):
-    owner_name = serializers.ReadOnlyField(source='owner.username')
+    owner_name = serializers.ReadOnlyField(source='owner.first_name')
 
     class Meta:
         model = Comment
@@ -15,7 +15,7 @@ class CommentSerializer(serializers.HyperlinkedModelSerializer):
 
 class PhotoSerializer(serializers.HyperlinkedModelSerializer):
     comments = CommentSerializer(many=True, read_only=True)
-    owner_name = serializers.ReadOnlyField(source='owner.username')
+    owner_name = serializers.ReadOnlyField(source='owner.first_name')
     owner_comment = serializers.CharField(allow_blank=True)
 
     class Meta:

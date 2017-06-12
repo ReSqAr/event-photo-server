@@ -33,6 +33,7 @@ urlpatterns = [
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^api-token-auth/', rest_views.obtain_auth_token),
     url(r'^information/',views.server_information),
+    url(r'^create-user/', views.create_user),
 ]
 
 if settings.DEBUG:

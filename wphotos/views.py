@@ -1,7 +1,11 @@
+import string
+from random import choice
+
 from django.shortcuts import render
 from django.contrib.auth.models import User, Group
 from rest_framework import viewsets
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from wphotos.models import Photo, Comment
@@ -14,10 +18,21 @@ from wserver.settings import LOCAL_NODE
 def server_information(request):
     return Response({"local_node": LOCAL_NODE})
 
+
 @api_view(['POST'])
+@permission_classes((AllowAny,))
 def create_user(request):
-    request.
-    return Response({"local_node": LOCAL_NODE})
+    username = ''.join(choice(string.ascii_letters) for _ in range(24))
+    password = ''.join(choice(string.ascii_letters) for _ in range(24))
+    name = request.data['name']
+
+    print("creating user: {}, pw: {}, name '{}'".format(username, password, name))
+
+    user = User.objects.create_superuser(username=username, email='', password=password, first_name=name)
+
+    token = user.auth_token.key
+
+    return Response({"token": token})
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -46,6 +61,7 @@ class PhotoViewSet(viewsets.ModelViewSet):
     def patch(self, request, *args, **kwargs):
         return self.partial_update(request, *args, **kwargs)
 
+
 class PhotoVisibleViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows photos to be viewed or edited.
@@ -62,6 +78,7 @@ class PhotoVisibleViewSet(viewsets.ModelViewSet):
     def patch(self, request, *args, **kwargs):
         return self.partial_update(request, *args, **kwargs)
 
+
 class CommentViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows comments to be viewed or edited.
@@ -77,4 +94,3 @@ class CommentViewSet(viewsets.ModelViewSet):
     # https://stackoverflow.com/a/41112919/7729124
     def patch(self, request, *args, **kwargs):
         return self.partial_update(request, *args, **kwargs)
-
