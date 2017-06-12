@@ -17,9 +17,6 @@ from local_settings import *
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-MEDIA_ROOT = BASE_DIR + '/media'
-MEDIA_URL = '/media/'
-
 THUMBNAIL_SIZE = (256,256)
 WEB_PHOTO_SIZE = (1024,1024)
 
@@ -34,10 +31,9 @@ CHALLENGE = "YY2017"
 #SECRET_KEY = moved to local_settings
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-# ALLOWED_HOSTS = []
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ["hochzeit.yhjz.de"]
 
 
 # Application definition
@@ -144,4 +140,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR + '/static'
+STATIC_URL = '/api/static/'
+
+MEDIA_ROOT = BASE_DIR + '/media'
+MEDIA_URL = '/api/media/'

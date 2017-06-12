@@ -15,11 +15,11 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 from django.conf.urls.static import static
-from django.contrib import admin
 from rest_framework import routers
+from rest_framework.authtoken import views as rest_views
+
 from wphotos import views
 from wserver import settings
-from rest_framework.authtoken import views as rest_views
 
 router = routers.DefaultRouter()
 router.register(r'users', views.UserViewSet)
@@ -32,7 +32,7 @@ urlpatterns = [
     url(r'^', include(router.urls)),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^api-token-auth/', rest_views.obtain_auth_token),
-    url(r'^information/',views.server_information),
+    url(r'^information/', views.server_information),
     url(r'^create-user/', views.create_user),
 ]
 
