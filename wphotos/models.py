@@ -3,6 +3,7 @@ import os
 import datetime
 from io import BytesIO
 from typing import Tuple
+import dateutil
 
 from PIL import Image
 from django.contrib.auth.models import User
@@ -56,7 +57,7 @@ class Photo(models.Model):
         # find creation date
         image = Image.open(self.photo)
         try:
-            self.dt = image._getexif()[36867]
+            self.dt = dateutil.parser.parse(image._getexif()[36867])
         except:
             self.dt = datetime.datetime.now()
 
