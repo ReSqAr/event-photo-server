@@ -1,17 +1,17 @@
 import string
 from random import choice
 
-from django.shortcuts import render
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User
 from rest_framework import viewsets
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.exceptions import APIException
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from wphotos.models import Photo, Comment
 from wphotos.permissions import IsOwnerOrReadOnly, IsUserOrReadOnly
 from wphotos.serializers import UserSerializer, PhotoSerializer, CommentSerializer
-from wserver.settings import LOCAL_NODE
+from wserver.settings import LOCAL_NODE, CHALLENGE
 
 
 @api_view(['GET'])
@@ -22,6 +22,13 @@ def server_information(request):
 @api_view(['POST'])
 @permission_classes((AllowAny,))
 def create_user(request):
+    challenge = request.data['challenge']
+    print("creating user: challenge = {}".format(challenge))
+
+    normalise_challenge = lambda s: s.strip().lower()
+    if normalise_challenge(challenge) != normalise_challenge(CHALLENGE):
+        raise APIException("challenged failed")
+
     username = ''.join(choice(string.ascii_letters) for _ in range(24))
     password = ''.join(choice(string.ascii_letters) for _ in range(24))
     name = request.data['name']

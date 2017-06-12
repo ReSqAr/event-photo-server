@@ -25,6 +25,8 @@ WEB_PHOTO_SIZE = (1024,1024)
 
 LOCAL_NODE = ""
 
+CHALLENGE = "YY2017"
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
