@@ -1,30 +1,35 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from wphotos.models import Photo, Comment
+from wphotos.models import Photo, Upvote
 
 
-class CommentSerializer(serializers.HyperlinkedModelSerializer):
+class UpvoteSerializer(serializers.HyperlinkedModelSerializer):
     owner_name = serializers.ReadOnlyField(source='owner.first_name')
 
     class Meta:
-        model = Comment
-        fields = ('id', 'url', 'owner', 'owner_name', 'parent', 'photo', 'dt', 'text')
-        read_only_fields = ('id', 'owner',)  # 'parent', 'photo',)
+        model = Upvote
+        fields = ('id', 'url', 'owner', 'owner_name', 'photo', 'dt',)
+        read_only_fields = ('id', 'owner', 'dt', 'photo',)
 
 
 class PhotoSerializer(serializers.HyperlinkedModelSerializer):
-    comments = CommentSerializer(many=True, read_only=True)
+    upvotes = UpvoteSerializer(many=True, read_only=True)
     owner_name = serializers.ReadOnlyField(source='owner.first_name')
     owner_comment = serializers.CharField(allow_blank=True)
+    upvote_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Photo
         fields = (
             'id', 'url', 'owner', 'owner_name',
             'upload_dt', 'photo_dt', 'visible', 'photo',
-            'hash_md5', 'thumbnail', 'web_photo', 'owner_comment', 'comments')
+            'hash_md5', 'thumbnail', 'web_photo', 'owner_comment', 'upvotes')
         read_only_fields = ('id', 'owner', 'thumbnail', 'web_photo', 'upload_dt', 'photo_dt')
+
+    @staticmethod
+    def get_upvote_count(obj):
+        return obj.upvotes.count()
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):

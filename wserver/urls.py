@@ -26,7 +26,7 @@ router = routers.DefaultRouter()
 router.register(r'users', views.UserViewSet)
 router.register(r'photos', views.PhotoViewSet)
 router.register(r'visiblephotos', views.PhotoVisibleViewSet)
-router.register(r'comments', views.CommentViewSet)
+router.register(r'upvotes', views.UpvoteViewSet)
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),

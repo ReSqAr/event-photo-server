@@ -8,9 +8,9 @@ from rest_framework.exceptions import APIException
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from wphotos.models import Photo, Comment
+from wphotos.models import Photo, Upvote
 from wphotos.permissions import IsOwnerOrReadOnly, IsUserOrReadOnly
-from wphotos.serializers import UserSerializer, PhotoSerializer, CommentSerializer
+from wphotos.serializers import UserSerializer, PhotoSerializer, UpvoteSerializer
 from wserver.settings import LOCAL_NODE, CHALLENGE
 
 
@@ -86,14 +86,14 @@ class PhotoVisibleViewSet(viewsets.ModelViewSet):
         return self.partial_update(request, *args, **kwargs)
 
 
-class CommentViewSet(viewsets.ModelViewSet):
+class UpvoteViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows comments to be viewed or edited.
     """
     permission_classes = (IsOwnerOrReadOnly,)
 
-    queryset = Comment.objects.all()
-    serializer_class = CommentSerializer
+    queryset = Upvote.objects.all()
+    serializer_class = UpvoteSerializer
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)

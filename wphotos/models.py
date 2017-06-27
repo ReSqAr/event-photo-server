@@ -39,7 +39,7 @@ class Photo(models.Model):
     owner_comment = models.CharField(max_length=500, blank=True)
 
     class Meta:
-        ordering = ['-dt']
+        ordering = ['-upload_dt']
 
     def save(self, *args, **kwargs):
         # check md5sum
@@ -113,15 +113,19 @@ class Photo(models.Model):
         return '{} ({})'.format(self.photo.name, self.id)
 
 
-class Comment(models.Model):
-    photo = models.ForeignKey(Photo, on_delete=models.CASCADE, related_name='comments')
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
-    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True)
+class Upvote(models.Model):
+    photo = models.ForeignKey(Photo, on_delete=models.CASCADE, related_name='upvotes')
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='upvotes')
     dt = models.DateTimeField()
-    text = models.CharField(max_length=500)
+
+    def save(self, *args, **kwargs):
+        # set dt
+        self.dt = datetime.datetime.now()
+
+        super(Upvote, self).save(*args, **kwargs)
 
     class Meta:
         ordering = ['-dt']
 
     def __str__(self):
-        return '{} ({}): {}'.format(self.photo.photo.name, self.id, self.text)
+        return '{} ({})'.format(self.photo.photo.name, self.id)
