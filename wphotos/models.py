@@ -27,16 +27,65 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
         Token.objects.create(user=instance)
 
 
+class Event(models.Model):
+    name = models.CharField(max_length=200)
+    start_dt = models.DateTimeField()
+    end_dt = models.DateTimeField()
+    dt = models.DateTimeField()
+    challenge = models.CharField(max_length=200)
+    icon = FileField(upload_to='event_icon', null=True)
+
+    class Meta:
+        ordering = ['-start_dt']
+
+    def save(self, *args, **kwargs):
+        # set dt
+        self.dt = datetime.datetime.now()
+
+        super(Event, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return '{} - {}'.format(self.id, self.name)
+
+
+class AuthenticatedUserForEvent(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='authenticated_events')
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='authenticated_users')
+    dt = models.DateTimeField()
+
+    class Meta:
+        ordering = ['-dt']
+
+    def save(self, *args, **kwargs):
+        # set dt
+        self.dt = datetime.datetime.now()
+
+        super(AuthenticatedUserForEvent, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return '{}: {} - {}'.format(self.id, self.event.name, self.user.name)
+
+    @staticmethod
+    def is_user_authenticated_for_event(user, event):
+        return AuthenticatedUserForEvent.objects.filter(user=user, event=event).exists()
+
+
 class Photo(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='photos')
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='photos')
+
+    # TODO: validate that owner is authorised to write to event!
+
     upload_dt = models.DateTimeField()
     photo_dt = models.DateTimeField()
     visible = BooleanField(default=False)
+
     photo = FileField(upload_to='photos')
     hash_md5 = models.CharField(max_length=200)
     thumbnail = FileField(upload_to='thumbnail', null=True)
     web_photo = FileField(upload_to='web_photo', null=True)
-    owner_comment = models.CharField(max_length=500, blank=True)
+
+    comment = models.CharField(max_length=500, blank=True)
 
     class Meta:
         ordering = ['-upload_dt']
@@ -113,10 +162,12 @@ class Photo(models.Model):
         return '{} ({})'.format(self.photo.name, self.id)
 
 
-class Upvote(models.Model):
-    photo = models.ForeignKey(Photo, on_delete=models.CASCADE, related_name='upvotes')
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='upvotes')
+class Like(models.Model):
+    photo = models.ForeignKey(Photo, on_delete=models.CASCADE, related_name='likes')
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='likes')
     dt = models.DateTimeField()
+
+    # TODO: validate that owner is authorised to write to event!
 
     class Meta:
         unique_together = ('photo', 'owner')
@@ -126,7 +177,7 @@ class Upvote(models.Model):
         # set dt
         self.dt = datetime.datetime.now()
 
-        super(Upvote, self).save(*args, **kwargs)
+        super(Like, self).save(*args, **kwargs)
 
     def __str__(self):
         return '{} ({})'.format(self.photo.photo.name, self.id)

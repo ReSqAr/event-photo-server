@@ -1,43 +1,100 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from wphotos.models import Photo, Upvote
+from wphotos.models import Photo, Like, Event, AuthenticatedUserForEvent
 
 
-class UpvoteSerializer(serializers.HyperlinkedModelSerializer):
+class LikeSerializer(serializers.HyperlinkedModelSerializer):
     owner_name = serializers.ReadOnlyField(source='owner.first_name')
 
     class Meta:
-        model = Upvote
+        model = Like
+        fields = ('id', 'url', 'owner', 'owner_name', 'photo', 'dt',)
+        read_only_fields = ('id', 'owner', 'dt',)
+
+
+class RestrictedLikeSerializer(serializers.HyperlinkedModelSerializer):
+    owner_name = serializers.ReadOnlyField(source='owner.first_name')
+
+    class Meta:
+        model = Like
         fields = ('id', 'url', 'owner', 'owner_name', 'photo', 'dt',)
         read_only_fields = ('id', 'owner', 'dt',)
 
 
 class PhotoSerializer(serializers.HyperlinkedModelSerializer):
-    upvotes = UpvoteSerializer(many=True, read_only=True)
+    likes = LikeSerializer(many=True, read_only=True)
     owner_name = serializers.ReadOnlyField(source='owner.first_name')
-    owner_comment = serializers.CharField(allow_blank=True)
-    upvote_count = serializers.SerializerMethodField()
-    upvoted_by_current_user = serializers.SerializerMethodField()
+    comment = serializers.CharField(allow_blank=True)
+    likes_count = serializers.SerializerMethodField()
+    liked_by_current_user = serializers.SerializerMethodField()
 
     class Meta:
         model = Photo
         fields = (
-            'id', 'url', 'owner', 'owner_name',
+            'id', 'url', 'event', 'owner', 'owner_name',
             'upload_dt', 'photo_dt', 'visible', 'photo',
-            'hash_md5', 'thumbnail', 'web_photo', 'owner_comment',
-            'upvotes', 'upvote_count', 'upvoted_by_current_user')
+            'hash_md5', 'thumbnail', 'web_photo', 'comment',
+            'likes', 'likes_count', 'likes_by_current_user')
         read_only_fields = ('id', 'owner', 'thumbnail', 'web_photo', 'upload_dt', 'photo_dt')
 
     @staticmethod
-    def get_upvote_count(obj):
-        return obj.upvotes.count()
+    def get_likes_count(obj):
+        return obj.likes.count()
 
-    def get_upvoted_by_current_user(self, obj):
+    def get_liked_by_current_user(self, obj):
         if not self.context['request'].user.is_authenticated():
             return False
         else:
-            return Upvote.objects.filter(photo=obj, owner=self.context['request'].user).exists()
+            return Like.objects.filter(photo=obj, owner=self.context['request'].user).exists()
+
+
+class RestrictedPhotoSerializer(serializers.HyperlinkedModelSerializer):
+    owner_name = serializers.ReadOnlyField(source='owner.first_name')
+    comment = serializers.CharField(allow_blank=True)
+    like_count = serializers.SerializerMethodField()
+    liked_by_current_user = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Photo
+        fields = (
+            'id', 'url', 'event', 'owner', 'owner_name',
+            'upload_dt', 'photo_dt', 'visible', 'photo',
+            'thumbnail', 'web_photo', 'comment',
+            'likes_count', 'likes_by_current_user')
+        read_only_fields = ('id', 'owner', 'thumbnail', 'web_photo', 'upload_dt', 'photo_dt')
+
+    @staticmethod
+    def get_likes_count(obj):
+        return obj.likes.count()
+
+    def get_liked_by_current_user(self, obj):
+        if not self.context['request'].user.is_authenticated():
+            return False
+        else:
+            return Like.objects.filter(photo=obj, owner=self.context['request'].user).exists()
+
+
+class UserAuthenticatedForEventSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = AuthenticatedUserForEvent
+        fields = ('id', 'url', 'user', 'event')
+
+
+class EventSerializer(serializers.HyperlinkedModelSerializer):
+    authenticated_users = PhotoSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Event
+        fields = ('id', 'url', 'name', 'start_dt', 'end_dt', 'icon', 'dt', 'authenticated_users')
+        read_only_fields = ('id', 'dt')
+
+
+class RestrictedEventSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Event
+        fields = ('id', 'url', 'name')
+        read_only_fields = ('id', 'name')
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):

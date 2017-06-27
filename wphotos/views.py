@@ -1,37 +1,30 @@
+import hashlib
 import string
 from random import choice
 
 from django.contrib.auth.models import User
-from rest_framework import viewsets
+from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import APIException
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
-from wphotos.models import Photo, Upvote
-from wphotos.permissions import IsOwnerOrReadOnly, IsUserOrReadOnly
-from wphotos.serializers import UserSerializer, PhotoSerializer, UpvoteSerializer
-from wserver.settings import LOCAL_NODE, CHALLENGE
-
-
-@api_view(['GET'])
-def server_information(request):
-    return Response({"local_node": LOCAL_NODE})
+from wphotos.models import Photo, Like, Event, AuthenticatedUserForEvent
+from wphotos.permissions import IsUserOrAdminConstructor, IsOwnerOrAuthorisedForEventConstructor
+from wphotos.serializers import UserSerializer, PhotoSerializer, LikeSerializer, EventSerializer, \
+    RestrictedEventSerializer, RestrictedPhotoSerializer
 
 
 @api_view(['POST'])
 @permission_classes((AllowAny,))
 def create_user(request):
-    challenge = request.data['challenge']
-    print("creating user: challenge = {}".format(challenge))
+    name = request.data['name'].strip()
 
-    normalise_challenge = lambda s: s.strip().lower()
-    if normalise_challenge(challenge) != normalise_challenge(CHALLENGE):
-        raise APIException("challenged failed")
+    if len(name) < 3:
+        raise APIException("user name too short")
 
     username = ''.join(choice(string.ascii_letters) for _ in range(24))
     password = ''.join(choice(string.ascii_letters) for _ in range(24))
-    name = request.data['name']
 
     print("creating user: {}, pw: {}, name '{}'".format(username, password, name))
 
@@ -42,21 +35,73 @@ def create_user(request):
     return Response({"token": token})
 
 
+@api_view(['POST'])
+@permission_classes((IsAuthenticated,))
+def authenticate_user(request):
+    user = request.user
+    event_id = request.data['event_id']
+    hashed_challenge = request.data['hashed_challenge']
+    print("authenticating: user = {}, event id = {}, hashed challenge = {}".format(user.id, event_id, hashed_challenge))
+
+    event_id = int(event_id)
+
+    try:
+        event = Event.objects.get(pk=event_id)
+    except:
+        raise APIException("challenged failed")
+
+    challenge_for_user = "{username}${token}${challenge}".format(
+        username=user.first_name,
+        token=user.auth_token.key,
+        challenge=event.challenge.strip().lower()
+    )
+
+    expected_challenge = hashlib.md5(challenge_for_user).hexdigest()
+    print("expected challenge = {}".format(expected_challenge))
+
+    if hashed_challenge != expected_challenge:
+        raise APIException("challenged failed")
+
+    AuthenticatedUserForEvent.objects.create(user=user, event=event)
+
+    return Response(EventSerializer(event).data)
+
+
 class UserViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows users to be viewed or edited.
     """
-    permission_classes = (IsUserOrReadOnly,)
+    permission_classes = (IsUserOrAdminConstructor(lambda x: x),)
 
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
 
 
-class PhotoViewSet(viewsets.ModelViewSet):
+class EventViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows events to be viewed or edited.
+    """
+    permission_classes = (IsAdminUser,)
+
+    queryset = Event.objects.all()
+    serializer_class = EventSerializer
+
+
+class RestrictedEventViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows event names to be viewed.
+    """
+    permission_classes = (IsAuthenticated,)
+
+    queryset = Event.objects.all()
+    serializer_class = RestrictedEventSerializer
+
+
+class PhotoViewSet(viewsets.ModelViewSet, mixins.UpdateModelMixin):
     """
     API endpoint that allows photos to be viewed or edited.
     """
-    permission_classes = (IsOwnerOrReadOnly,)
+    permission_classes = (IsAdminUser,)
 
     queryset = Photo.objects.all()
     serializer_class = PhotoSerializer
@@ -64,40 +109,59 @@ class PhotoViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
-    # https://stackoverflow.com/a/41112919/7729124
-    def patch(self, request, *args, **kwargs):
-        return self.partial_update(request, *args, **kwargs)
 
-
-class PhotoVisibleViewSet(viewsets.ModelViewSet):
+class RestrictedPhotoViewSet(viewsets.ModelViewSet, mixins.UpdateModelMixin):
     """
-    API endpoint that allows photos to be viewed or edited.
+    API endpoint that allows photos associated to an event to be viewed or edited.
     """
-    permission_classes = (IsOwnerOrReadOnly,)
+    permission_classes = (IsOwnerOrAuthorisedForEventConstructor(lambda x: x.owner, lambda x: x.event),)
 
-    queryset = Photo.objects.filter(visible=True).all()
-    serializer_class = PhotoSerializer
+    serializer_class = RestrictedPhotoSerializer
+
+    def get_queryset(self):
+        event_id = int(self.kwargs['event_id'])
+        event = Event.objects.get(pk=event_id)
+        user = self.request.user
+
+        if AuthenticatedUserForEvent.is_user_authenticated_for_event(user, event):
+            return Photo.objects.filter(event=event, visible=True).all()
+        else:
+            return None
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
-    # https://stackoverflow.com/a/41112919/7729124
-    def patch(self, request, *args, **kwargs):
-        return self.partial_update(request, *args, **kwargs)
 
-
-class UpvoteViewSet(viewsets.ModelViewSet):
+class LikeViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows comments to be viewed or edited.
     """
-    permission_classes = (IsOwnerOrReadOnly,)
+    permission_classes = (IsAdminUser,)
 
-    queryset = Upvote.objects.all()
-    serializer_class = UpvoteSerializer
+    queryset = Like.objects.all()
+    serializer_class = LikeSerializer
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
-    # https://stackoverflow.com/a/41112919/7729124
-    def patch(self, request, *args, **kwargs):
-        return self.partial_update(request, *args, **kwargs)
+
+class RestrictedLikeViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows comments to be viewed or edited.
+    """
+    permission_classes = (IsOwnerOrAuthorisedForEventConstructor(lambda x: x.owner, lambda x: x.photo.event),)
+
+    serializer_class = LikeSerializer
+
+    def get_queryset(self):
+        event_id = int(self.kwargs['event_id'])
+        event = Event.objects.get(pk=event_id)
+        user = self.request.user
+
+        if AuthenticatedUserForEvent.is_user_authenticated_for_event(user, event):
+            return Like.objects.filter(photo__event=event, photo__visible=True).all()
+        else:
+            return None
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
