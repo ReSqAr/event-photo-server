@@ -1,21 +1,21 @@
+import datetime
 import hashlib
 import os
-import datetime
 from io import BytesIO
 from typing import Tuple
-import dateutil
 
+import dateutil.parser
 from PIL import Image
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.base import ContentFile
 from django.db import models
-from django.conf import settings
 from django.db.models import FileField, BooleanField
 from django.db.models.fields.files import FieldFile
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from rest_framework.exceptions import ValidationError
 from rest_framework.authtoken.models import Token
+from rest_framework.exceptions import ValidationError
 
 from wserver.settings import THUMBNAIL_SIZE, WEB_PHOTO_SIZE
 
@@ -29,13 +29,14 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
 
 class Photo(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='photos')
-    dt = models.DateTimeField()
+    upload_dt = models.DateTimeField()
+    photo_dt = models.DateTimeField()
     visible = BooleanField(default=False)
     photo = FileField(upload_to='photos')
     hash_md5 = models.CharField(max_length=200)
     thumbnail = FileField(upload_to='thumbnail', null=True)
     web_photo = FileField(upload_to='web_photo', null=True)
-    owner_comment = models.CharField(max_length=500,blank=True)
+    owner_comment = models.CharField(max_length=500, blank=True)
 
     class Meta:
         ordering = ['-dt']
@@ -57,9 +58,15 @@ class Photo(models.Model):
         # find creation date
         image = Image.open(self.photo)
         try:
-            self.dt = dateutil.parser.parse(image._getexif()[36867])
+            # format of dt_str: 2017:06:14 18:35:33
+            dt_str = image._getexif()[36867]
+            dt_str = dt_str.replace(':', '-', 2)
+            self.photo_dt = dateutil.parser.parse(dt_str)
         except:
-            self.dt = datetime.datetime.now()
+            self.photo_dt = datetime.datetime.now()
+
+        # upload dt
+        self.upload_dt = datetime.datetime.now()
 
         super(Photo, self).save(*args, **kwargs)
 

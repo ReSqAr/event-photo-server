@@ -21,9 +21,10 @@ class PhotoSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Photo
         fields = (
-        'id', 'url', 'owner', 'owner_name', 'dt', 'visible', 'photo', 'hash_md5', 'thumbnail', 'web_photo', 'owner_comment',
-        'comments')
-        read_only_fields = ('id', 'owner', 'thumbnail', 'web_photo', 'dt')
+            'id', 'url', 'owner', 'owner_name',
+            'upload_dt', 'photo_dt', 'visible', 'photo',
+            'hash_md5', 'thumbnail', 'web_photo', 'owner_comment', 'comments')
+        read_only_fields = ('id', 'owner', 'thumbnail', 'web_photo', 'upload_dt', 'photo_dt')
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
