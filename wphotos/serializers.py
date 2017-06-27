@@ -39,6 +39,7 @@ class PhotoSerializer(serializers.HyperlinkedModelSerializer):
         else:
             return Upvote.objects.filter(photo=obj, owner=self.context['request'].user).exists()
 
+
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     photos = PhotoSerializer(many=True, read_only=True)
 

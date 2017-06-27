@@ -128,6 +128,5 @@ class Upvote(models.Model):
 
         super(Upvote, self).save(*args, **kwargs)
 
-
     def __str__(self):
         return '{} ({})'.format(self.photo.photo.name, self.id)
