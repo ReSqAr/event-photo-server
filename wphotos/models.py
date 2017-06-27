@@ -118,14 +118,16 @@ class Upvote(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='upvotes')
     dt = models.DateTimeField()
 
+    class Meta:
+        unique_together = ('photo', 'owner')
+        ordering = ['-dt']
+
     def save(self, *args, **kwargs):
         # set dt
         self.dt = datetime.datetime.now()
 
         super(Upvote, self).save(*args, **kwargs)
 
-    class Meta:
-        ordering = ['-dt']
 
     def __str__(self):
         return '{} ({})'.format(self.photo.photo.name, self.id)

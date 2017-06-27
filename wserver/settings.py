@@ -31,9 +31,9 @@ CHALLENGE = "YY2017"
 #SECRET_KEY = moved to local_settings
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ["yyphotos.yhjz.de"]
+ALLOWED_HOSTS = ["*"]
 
 CORS_ORIGIN_ALLOW_ALL = True
 
