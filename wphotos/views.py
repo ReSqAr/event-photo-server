@@ -10,9 +10,10 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
-from wphotos.models import Photo, Like, Event, AuthenticatedUserForEvent
-from wphotos.permissions import IsUserOrAdminConstructor, IsOwnerOrAuthorisedForEventConstructor
-from wphotos.serializers import UserSerializer, PhotoSerializer, LikeSerializer, EventSerializer
+from wphotos.models import Photo, Like, Event, UserAuthenticatedForEvent
+from wphotos.permissions import IsOwnerOrAuthorisedForEventConstructor
+from wphotos.serializers import UserSerializer, PhotoSerializer, LikeSerializer, EventSerializer, \
+    UserAuthenticatedForEventSerializer
 
 
 @api_view(['POST'])
@@ -76,7 +77,7 @@ def authenticate_user_for_event(request, **kwargs):
     if hashed_challenge != expected_challenge:
         raise ValidationError("challenged failed")
 
-    AuthenticatedUserForEvent.objects.create(user=user, event=event)
+    UserAuthenticatedForEvent.objects.create(user=user, event=event)
 
     return Response(EventSerializer(event, context={'request': request}).data,
                     status=status.HTTP_201_CREATED)
@@ -86,7 +87,7 @@ class UserViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows users to be viewed or edited.
     """
-    permission_classes = (IsUserOrAdminConstructor(lambda x: x),)
+    permission_classes = (IsAdminUser,)
 
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
@@ -100,6 +101,16 @@ class EventViewSet(viewsets.ModelViewSet):
 
     queryset = Event.objects.all()
     serializer_class = EventSerializer
+
+
+class AuthenticatedUserForEventViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows events to be viewed or edited.
+    """
+    permission_classes = (IsAdminUser,)
+
+    queryset = UserAuthenticatedForEvent.objects.all()
+    serializer_class = UserAuthenticatedForEventSerializer
 
 
 class PhotoViewSet(viewsets.ModelViewSet, mixins.UpdateModelMixin):
@@ -129,7 +140,7 @@ class PhotoViewSet(viewsets.ModelViewSet, mixins.UpdateModelMixin):
         if event_id is not None:
             event = Event.objects.get(pk=event_id)
 
-            if AuthenticatedUserForEvent.is_user_authenticated_for_event(user, event):
+            if UserAuthenticatedForEvent.is_user_authenticated_for_event(user, event):
                 queryset = queryset.filter(event=event)
             else:
                 return []
@@ -187,7 +198,7 @@ class LikeViewSet(viewsets.ModelViewSet):
         if event_pk is not None:
             event = Event.objects.get(pk=event_pk)
 
-            if AuthenticatedUserForEvent.is_user_authenticated_for_event(user, event):
+            if UserAuthenticatedForEvent.is_user_authenticated_for_event(user, event):
                 queryset = queryset.filter(photo__event=event)
             else:
                 return []

@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from wphotos.models import Photo, Like, Event, AuthenticatedUserForEvent
+from wphotos.models import Photo, Like, Event, UserAuthenticatedForEvent
 
 
 class LikeSerializer(serializers.ModelSerializer):
@@ -15,7 +15,7 @@ class LikeSerializer(serializers.ModelSerializer):
     def validate(self, data):
         user = self.context['request'].user
         event = data["photo"].event
-        if not AuthenticatedUserForEvent.is_user_authenticated_for_event(user, event):
+        if not UserAuthenticatedForEvent.is_user_authenticated_for_event(user, event):
             raise serializers.ValidationError('user not authorised for this event')
         return data
 
@@ -38,7 +38,7 @@ class PhotoSerializer(serializers.ModelSerializer):
     def validate(self, data):
         user = self.context['request'].user
         event = data["event"]
-        if not AuthenticatedUserForEvent.is_user_authenticated_for_event(user, event):
+        if not UserAuthenticatedForEvent.is_user_authenticated_for_event(user, event):
             raise serializers.ValidationError('user not authorised for this event')
         return data
 
@@ -51,7 +51,7 @@ class PhotoSerializer(serializers.ModelSerializer):
 
 class UserAuthenticatedForEventSerializer(serializers.ModelSerializer):
     class Meta:
-        model = AuthenticatedUserForEvent
+        model = UserAuthenticatedForEvent
         fields = ('id', 'url', 'user', 'event')
 
 

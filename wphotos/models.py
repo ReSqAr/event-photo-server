@@ -47,7 +47,7 @@ class Event(models.Model):
         return '{} - {}'.format(self.pk, self.name)
 
 
-class AuthenticatedUserForEvent(models.Model):
+class UserAuthenticatedForEvent(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='authenticated_events')
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='authenticated_users')
     dt = models.DateTimeField()
@@ -59,7 +59,7 @@ class AuthenticatedUserForEvent(models.Model):
         # set dt
         self.dt = timezone.now()
 
-        super(AuthenticatedUserForEvent, self).save(*args, **kwargs)
+        super(UserAuthenticatedForEvent, self).save(*args, **kwargs)
 
     def __str__(self):
         return '{}: {} - {}'.format(self.pk, self.event.name, self.user.name)
@@ -68,7 +68,7 @@ class AuthenticatedUserForEvent(models.Model):
     def is_user_authenticated_for_event(user: User, event: Event):
         if not user.is_authenticated():
             return False
-        return AuthenticatedUserForEvent.objects.filter(user=user, event=event).exists()
+        return UserAuthenticatedForEvent.objects.filter(user=user, event=event).exists()
 
 
 class Photo(models.Model):

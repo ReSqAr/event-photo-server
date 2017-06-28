@@ -10,7 +10,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 # Create your tests here.
-from wphotos.models import Event, AuthenticatedUserForEvent, Photo, Like
+from wphotos.models import Event, UserAuthenticatedForEvent, Photo, Like
 
 
 class ApiTest(APITestCase):
@@ -39,9 +39,9 @@ class ApiTest(APITestCase):
                                       challenge='challenge')
 
         # create authorisations
-        auth31 = AuthenticatedUserForEvent.objects.create(user=user3, event=event1)
-        auth32 = AuthenticatedUserForEvent.objects.create(user=user3, event=event2)
-        auth33 = AuthenticatedUserForEvent.objects.create(user=user3, event=event3)
+        auth31 = UserAuthenticatedForEvent.objects.create(user=user3, event=event1)
+        auth32 = UserAuthenticatedForEvent.objects.create(user=user3, event=event2)
+        auth33 = UserAuthenticatedForEvent.objects.create(user=user3, event=event3)
 
         # create photo
         path = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'media')
@@ -166,7 +166,7 @@ class ApiTest(APITestCase):
         self.assertEqual(Event.objects.last().challenge, event_data['challenge'])
 
     def test_auth_for_event_no_user(self):
-        initial_auth_count = AuthenticatedUserForEvent.objects.count()
+        initial_auth_count = UserAuthenticatedForEvent.objects.count()
 
         # get event
         event = Event.objects.get(name='My Amazing Wedding 1')
@@ -184,10 +184,10 @@ class ApiTest(APITestCase):
         response = self.client.post(url, data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(AuthenticatedUserForEvent.objects.count(), initial_auth_count)
+        self.assertEqual(UserAuthenticatedForEvent.objects.count(), initial_auth_count)
 
     def test_auth_for_event_failing_challenge(self):
-        initial_auth_count = AuthenticatedUserForEvent.objects.count()
+        initial_auth_count = UserAuthenticatedForEvent.objects.count()
 
         # get user
         user = User.objects.get(username='user1')
@@ -211,10 +211,10 @@ class ApiTest(APITestCase):
         response = self.client.post(url, data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(AuthenticatedUserForEvent.objects.count(), initial_auth_count)
+        self.assertEqual(UserAuthenticatedForEvent.objects.count(), initial_auth_count)
 
     def test_auth_for_event(self):
-        initial_auth_count = AuthenticatedUserForEvent.objects.count()
+        initial_auth_count = UserAuthenticatedForEvent.objects.count()
 
         # get user
         user = User.objects.get(username='user1')
@@ -236,7 +236,7 @@ class ApiTest(APITestCase):
         response = self.client.post(url, data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(AuthenticatedUserForEvent.objects.count(), initial_auth_count + 1)
+        self.assertEqual(UserAuthenticatedForEvent.objects.count(), initial_auth_count + 1)
         self.assertEqual(response.data['name'], event.name)
 
     def test_upload_photo_no_auth(self):
@@ -370,9 +370,9 @@ class ApiTest(APITestCase):
         event3 = Event.objects.get(name='My Amazing Wedding 3')
 
         # create auth
-        AuthenticatedUserForEvent.objects.create(user=user1, event=event3)
-        AuthenticatedUserForEvent.objects.create(user=user2, event=event2)
-        AuthenticatedUserForEvent.objects.create(user=user2, event=event3)
+        UserAuthenticatedForEvent.objects.create(user=user1, event=event3)
+        UserAuthenticatedForEvent.objects.create(user=user2, event=event2)
+        UserAuthenticatedForEvent.objects.create(user=user2, event=event3)
 
         # get photos
         photo3, photo2, photo1 = Photo.objects.all()
@@ -410,7 +410,7 @@ class ApiTest(APITestCase):
         event2 = Event.objects.get(name='My Amazing Wedding 2')
 
         # create auth
-        AuthenticatedUserForEvent.objects.create(user=user, event=event2)
+        UserAuthenticatedForEvent.objects.create(user=user, event=event2)
 
         url = reverse('photo-list')
         response = self.client.get(url, format='json')
@@ -489,7 +489,7 @@ class ApiTest(APITestCase):
         photo = Photo.objects.first()
 
         # create auth
-        AuthenticatedUserForEvent.objects.create(user=user, event=photo.event)
+        UserAuthenticatedForEvent.objects.create(user=user, event=photo.event)
 
         url = reverse('like-list')
         photo_data = {

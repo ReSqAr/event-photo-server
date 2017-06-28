@@ -1,6 +1,6 @@
 from rest_framework import permissions
 
-from wphotos.models import AuthenticatedUserForEvent
+from wphotos.models import UserAuthenticatedForEvent
 
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
@@ -109,7 +109,7 @@ def IsOwnerOrAuthorisedForEventConstructor(_get_owner, _get_event):
                     # an authorised user may view it
                     user = request.user
                     event = _get_event(obj)
-                    return AuthenticatedUserForEvent.is_user_authenticated_for_event(user, event)
+                    return UserAuthenticatedForEvent.is_user_authenticated_for_event(user, event)
                 else:
                     return False
 
