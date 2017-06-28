@@ -15,6 +15,9 @@ from wphotos.models import Event, UserAuthenticatedForEvent, Photo, Like
 
 class ApiTest(APITestCase):
     def setUp(self):
+        # test photo
+        image_path = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'media/test_heart.jpg')
+
         # create user
         admin1 = User.objects.create_superuser('admin1', '', 'abc123abc', first_name='admin1')
         admin2 = User.objects.create_superuser('admin2', '', 'abc123abc', first_name='admin2')
@@ -28,15 +31,18 @@ class ApiTest(APITestCase):
         event1 = Event.objects.create(name='My Amazing Wedding 1',
                                       start_dt=timezone.now(),
                                       end_dt=timezone.now(),
-                                      challenge='challenge')
+                                      challenge='challenge',
+                                      icon=image_path)
         event2 = Event.objects.create(name='My Amazing Wedding 2',
                                       start_dt=timezone.now(),
                                       end_dt=timezone.now(),
-                                      challenge='challenge')
+                                      challenge='challenge',
+                                      icon=image_path)
         event3 = Event.objects.create(name='My Amazing Wedding 3',
                                       start_dt=timezone.now(),
                                       end_dt=timezone.now(),
-                                      challenge='challenge')
+                                      challenge='challenge',
+                                      icon=image_path)
 
         # create authorisations
         auth31 = UserAuthenticatedForEvent.objects.create(user=user3, event=event1)
@@ -44,33 +50,28 @@ class ApiTest(APITestCase):
         auth33 = UserAuthenticatedForEvent.objects.create(user=user3, event=event3)
 
         # create photo
-        path = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'media')
-        image = Image.new('RGB', (100, 100))
-        tmp_file = tempfile.NamedTemporaryFile(suffix='.jpg', dir=path)
-        image.save(tmp_file)
-
         photo31 = Photo.objects.create(
             owner=user3,
             event=event1,
-            photo=tmp_file.name,
+            photo=image_path,
             visible=True,
-            hash_md5='78ef68043f5aed0de916c936e3d8fb2f',
+            hash_md5='6f96ecc6e845a7a3838d83497133ba3d',
             comment='abc',
         )
         photo32 = Photo.objects.create(
             owner=user3,
             event=event2,
-            photo=tmp_file.name,
+            photo=image_path,
             visible=True,
-            hash_md5='78ef68043f5aed0de916c936e3d8fb2f',
+            hash_md5='6f96ecc6e845a7a3838d83497133ba3d',
             comment='abc',
         )
         photo33 = Photo.objects.create(
             owner=user3,
             event=event3,
-            photo=tmp_file.name,
+            photo=image_path,
             visible=True,
-            hash_md5='78ef68043f5aed0de916c936e3d8fb2f',
+            hash_md5='6f96ecc6e845a7a3838d83497133ba3d',
             comment='abc',
         )
 

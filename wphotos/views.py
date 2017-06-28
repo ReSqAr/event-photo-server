@@ -45,6 +45,7 @@ def event_names(request):
         return {
             'id': event.pk,
             'name': event.name,
+            'icon': request.build_absolute_uri(event.icon.url),
         }
 
     return Response([pp_event(event) for event in events])
