@@ -56,19 +56,10 @@ class UserAuthenticatedForEventSerializer(serializers.ModelSerializer):
 
 
 class EventSerializer(serializers.ModelSerializer):
-    authenticated_users = UserAuthenticatedForEventSerializer(many=True, read_only=True)
-
     class Meta:
         model = Event
-        fields = ('id', 'url', 'name', 'challenge', 'start_dt', 'end_dt', 'icon', 'dt', 'authenticated_users')
+        fields = ('id', 'url', 'name', 'challenge', 'start_dt', 'end_dt', 'icon', 'dt')
         read_only_fields = ('id', 'dt')
-
-
-class RestrictedEventSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Event
-        fields = ('id', 'url', 'name')
-        read_only_fields = ('id', 'name')
 
 
 class UserSerializer(serializers.ModelSerializer):

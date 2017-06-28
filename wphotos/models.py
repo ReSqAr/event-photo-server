@@ -10,7 +10,6 @@ from django.contrib.auth.models import User
 from django.core.files.base import ContentFile
 from django.db import models
 from django.db.models import FileField, BooleanField
-from django.db.models.fields.files import FieldFile
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
@@ -45,7 +44,7 @@ class Event(models.Model):
         super(Event, self).save(*args, **kwargs)
 
     def __str__(self):
-        return '{} - {}'.format(self.id, self.name)
+        return '{} - {}'.format(self.pk, self.name)
 
 
 class AuthenticatedUserForEvent(models.Model):
@@ -63,10 +62,10 @@ class AuthenticatedUserForEvent(models.Model):
         super(AuthenticatedUserForEvent, self).save(*args, **kwargs)
 
     def __str__(self):
-        return '{}: {} - {}'.format(self.id, self.event.name, self.user.name)
+        return '{}: {} - {}'.format(self.pk, self.event.name, self.user.name)
 
     @staticmethod
-    def is_user_authenticated_for_event(user, event):
+    def is_user_authenticated_for_event(user: User, event: Event):
         if not user.is_authenticated():
             return False
         return AuthenticatedUserForEvent.objects.filter(user=user, event=event).exists()
@@ -129,7 +128,7 @@ class Photo(models.Model):
         return hash_md5.hexdigest()
 
     @staticmethod
-    def save_scaled_version(source: FieldFile, size: Tuple[int, int], prefix: str, target: FieldFile) -> bool:
+    def save_scaled_version(source: FileField, size: Tuple[int, int], prefix: str, target: FileField) -> bool:
         """
         from: https://stackoverflow.com/a/43011898/7729124
         """
@@ -161,7 +160,7 @@ class Photo(models.Model):
         return True
 
     def __str__(self):
-        return '{} ({})'.format(self.photo.name, self.id)
+        return '{} ({})'.format(self.photo.name, self.pk)
 
 
 class Like(models.Model):
@@ -182,4 +181,4 @@ class Like(models.Model):
         super(Like, self).save(*args, **kwargs)
 
     def __str__(self):
-        return '{} ({})'.format(self.photo.photo.name, self.id)
+        return '{} ({})'.format(self.photo.photo.name, self.pk)

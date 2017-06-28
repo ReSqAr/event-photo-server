@@ -124,6 +124,18 @@ class ApiTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(Event.objects.count(), initial_event_count)
 
+    def test_admin_event_list(self):
+        initial_event_count = Event.objects.count()
+
+        # get admin
+        admin = User.objects.get(username='admin1')
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + admin.auth_token.key)
+
+        url = reverse('event-names')
+        response = self.client.get(url, format='json')
+
+        self.assertEqual(len(response.data), initial_event_count)
+
     def test_admin_event_creation(self):
         initial_event_count = Event.objects.count()
 
@@ -345,6 +357,49 @@ class ApiTest(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], 3)
+
+    def test_list_photos_sort_order(self):
+        # get user
+        user1 = User.objects.get(username='user1')
+        user2 = User.objects.get(username='user2')
+        user3 = User.objects.get(username='user3')
+
+        # get event
+        event1 = Event.objects.get(name='My Amazing Wedding 1')
+        event2 = Event.objects.get(name='My Amazing Wedding 2')
+        event3 = Event.objects.get(name='My Amazing Wedding 3')
+
+        # create auth
+        AuthenticatedUserForEvent.objects.create(user=user1, event=event3)
+        AuthenticatedUserForEvent.objects.create(user=user2, event=event2)
+        AuthenticatedUserForEvent.objects.create(user=user2, event=event3)
+
+        # get photos
+        photo3, photo2, photo1 = Photo.objects.all()
+        print(photo1.pk, photo2.pk, photo3.pk)
+
+        # create likes
+        Like.objects.create(owner=user1, photo=photo3)
+        Like.objects.create(owner=user2, photo=photo2)
+        Like.objects.create(owner=user2, photo=photo3)
+        Like.objects.create(owner=user3, photo=photo1)
+        Like.objects.create(owner=user3, photo=photo2)
+        Like.objects.create(owner=user3, photo=photo3)
+
+        # request
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + user3.auth_token.key)
+        url = reverse('photo-list')
+        url += '?sort_order=likes'
+        response = self.client.get(url, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 3)
+
+        p1, p2, p3 = response.data['results']
+
+        self.assertEqual(p1['likes'], 3)
+        self.assertEqual(p2['likes'], 2)
+        self.assertEqual(p3['likes'], 1)
 
     def test_list_photos_user_with_auth(self):
         # get user

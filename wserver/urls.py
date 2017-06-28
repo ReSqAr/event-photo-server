@@ -23,10 +23,7 @@ from wserver import settings
 
 router = routers.DefaultRouter()
 router.register(r'users', views.UserViewSet)
-
-router.register(r'eventnames', views.RestrictedEventViewSet, )
-
-router.register(r'all/events', views.EventViewSet, base_name='event')
+router.register(r'events', views.EventViewSet, base_name='event')
 router.register(r'photos', views.PhotoViewSet, base_name='photo')
 router.register(r'likes', views.LikeViewSet, base_name='like')
 
@@ -37,6 +34,7 @@ urlpatterns = [
     url(r'^api/create-user/', views.create_user, name='create-user'),
     url(r'^api/authenticate_user_for_event/(?P<event_id>\d+)', views.authenticate_user_for_event,
         name='auth-user-for-event'),
+    url(r'^api/event-names/', views.event_names, name='event-names'),
 
     url(r'^api/', include(router.urls)),
 
