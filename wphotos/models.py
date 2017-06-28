@@ -1,4 +1,3 @@
-import datetime
 import hashlib
 import os
 from io import BytesIO
@@ -14,6 +13,7 @@ from django.db.models import FileField, BooleanField
 from django.db.models.fields.files import FieldFile
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
 
@@ -40,7 +40,7 @@ class Event(models.Model):
 
     def save(self, *args, **kwargs):
         # set dt
-        self.dt = datetime.datetime.now()
+        self.dt = timezone.now()
 
         super(Event, self).save(*args, **kwargs)
 
@@ -58,7 +58,7 @@ class AuthenticatedUserForEvent(models.Model):
 
     def save(self, *args, **kwargs):
         # set dt
-        self.dt = datetime.datetime.now()
+        self.dt = timezone.now()
 
         super(AuthenticatedUserForEvent, self).save(*args, **kwargs)
 
@@ -67,6 +67,8 @@ class AuthenticatedUserForEvent(models.Model):
 
     @staticmethod
     def is_user_authenticated_for_event(user, event):
+        if not user.is_authenticated():
+            return False
         return AuthenticatedUserForEvent.objects.filter(user=user, event=event).exists()
 
 
@@ -112,10 +114,10 @@ class Photo(models.Model):
             dt_str = dt_str.replace(':', '-', 2)
             self.photo_dt = dateutil.parser.parse(dt_str)
         except:
-            self.photo_dt = datetime.datetime.now()
+            self.photo_dt = timezone.now()
 
         # upload dt
-        self.upload_dt = datetime.datetime.now()
+        self.upload_dt = timezone.now()
 
         super(Photo, self).save(*args, **kwargs)
 
@@ -163,8 +165,8 @@ class Photo(models.Model):
 
 
 class Like(models.Model):
-    photo = models.ForeignKey(Photo, on_delete=models.CASCADE, related_name='likes')
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='likes')
+    photo = models.ForeignKey(Photo, on_delete=models.CASCADE, related_name='like_set')
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='like_set')
     dt = models.DateTimeField()
 
     # TODO: validate that owner is authorised to write to event!
@@ -175,7 +177,7 @@ class Like(models.Model):
 
     def save(self, *args, **kwargs):
         # set dt
-        self.dt = datetime.datetime.now()
+        self.dt = timezone.now()
 
         super(Like, self).save(*args, **kwargs)
 

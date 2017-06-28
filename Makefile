@@ -8,6 +8,9 @@ setup: clean
 	echo "from django.contrib.auth.models import User; User.objects.create_superuser('yasin', '', 'abc123abc')" | python3 manage.py shell
 	echo "from django.contrib.auth.models import User; User.objects.create_superuser('yvonne', '', 'abc123abc')" | python3 manage.py shell
 
+test:
+	python3 manage.py test wphotos.tests
+
 run:
 	python3 manage.py runserver
 
