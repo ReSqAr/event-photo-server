@@ -36,10 +36,12 @@ class PhotoSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'owner', 'thumbnail', 'web_photo', 'upload_dt', 'photo_dt')
 
     def validate(self, data):
-        user = self.context['request'].user
-        event = data["event"]
-        if not UserAuthenticatedForEvent.is_user_authenticated_for_event(user, event):
-            raise serializers.ValidationError('user not authorised for this event')
+        # only check if user <-> event if event gets indeed updated
+        if "event" in data:
+            user = self.context['request'].user
+            event = data["event"]
+            if not UserAuthenticatedForEvent.is_user_authenticated_for_event(user, event):
+                raise serializers.ValidationError('user not authorised for this event')
         return data
 
     def get_liked_by_current_user(self, obj):

@@ -39,6 +39,7 @@ def create_user(request):
 @api_view(['GET'])
 @permission_classes((IsAuthenticated,))
 def events_metadata(request):
+    user = request.user
     events = Event.objects.all()
 
     def pp_event(event):
@@ -46,6 +47,7 @@ def events_metadata(request):
             'id': event.pk,
             'name': event.name,
             'icon': request.build_absolute_uri(event.icon.url),
+            'has_access': UserAuthenticatedForEvent.is_user_authenticated_for_event(user, event),
         }
 
     return Response([pp_event(event) for event in events])
@@ -114,7 +116,7 @@ class AuthenticatedUserForEventViewSet(viewsets.ModelViewSet):
     serializer_class = UserAuthenticatedForEventSerializer
 
 
-class PhotoViewSet(viewsets.ModelViewSet, mixins.UpdateModelMixin):
+class PhotoViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows photos associated to an event to be viewed or edited.
     """
@@ -171,6 +173,10 @@ class PhotoViewSet(viewsets.ModelViewSet, mixins.UpdateModelMixin):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
+    # https://stackoverflow.com/a/41112919/7729124
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
 
 
 class LikeViewSet(viewsets.ModelViewSet):
