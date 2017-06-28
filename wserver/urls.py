@@ -35,7 +35,7 @@ urlpatterns = [
     url(r'^api/create-user/', views.create_user, name='create-user'),
     url(r'^api/authenticate_user_for_event/(?P<event_id>\d+)', views.authenticate_user_for_event,
         name='auth-user-for-event'),
-    url(r'^api/event-names/', views.event_names, name='event-names'),
+    url(r'^api/events-metadata/', views.events_metadata, name='event-names'),
 
     url(r'^api/', include(router.urls)),
 

@@ -173,8 +173,7 @@ class ApiTest(APITestCase):
         event = Event.objects.get(name='My Amazing Wedding 1')
 
         # auth
-        challenge_for_user = '{username}${token}${challenge}'.format(
-            username='',
+        challenge_for_user = '{token}${challenge}'.format(
             token='',
             challenge=event.challenge.strip().lower()
         )
@@ -198,8 +197,7 @@ class ApiTest(APITestCase):
         event = Event.objects.get(name='My Amazing Wedding 1')
 
         # auth
-        challenge_for_user = '{username}${token}${challenge}'.format(
-            username=user.first_name,
+        challenge_for_user = '{token}${challenge}'.format(
             token=user.auth_token.key,
             challenge=event.challenge.strip().lower()
         )
@@ -225,8 +223,7 @@ class ApiTest(APITestCase):
         event = Event.objects.get(name='My Amazing Wedding 1')
 
         # auth
-        challenge_for_user = '{username}${token}${challenge}'.format(
-            username=user.first_name,
+        challenge_for_user = '{token}${challenge}'.format(
             token=user.auth_token.key,
             challenge=event.challenge.strip().lower()
         )

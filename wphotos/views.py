@@ -38,7 +38,7 @@ def create_user(request):
 
 @api_view(['GET'])
 @permission_classes((IsAuthenticated,))
-def event_names(request):
+def events_metadata(request):
     events = Event.objects.all()
 
     def pp_event(event):
@@ -66,7 +66,7 @@ def authenticate_user_for_event(request, **kwargs):
     except:
         raise ValidationError("challenged failed")
 
-    challenge_for_user = "{username}${token}${challenge}".format(
+    challenge_for_user = "{token}${challenge}".format(
         username=user.first_name,
         token=user.auth_token.key,
         challenge=event.challenge.strip().lower()
