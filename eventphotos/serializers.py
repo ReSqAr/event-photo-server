@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from wphotos.models import Photo, Like, Event, UserAuthenticatedForEvent
+from eventphotos.models import Photo, Like, Event, UserAuthenticatedForEvent
 
 
 class LikeSerializer(serializers.ModelSerializer):

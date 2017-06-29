@@ -9,7 +9,7 @@ setup: clean
 	echo "from django.contrib.auth.models import User; User.objects.create_superuser('yvonne', '', 'abc123abc')" | python3 manage.py shell
 
 test:
-	python3 manage.py test wphotos.tests
+	python3 manage.py test eventphotos.tests
 
 run:
 	python3 manage.py runserver

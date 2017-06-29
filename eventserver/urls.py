@@ -18,8 +18,8 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from rest_framework import routers
 
-from wphotos import views
-from wserver import settings
+from eventphotos import views
+from eventserver import settings
 
 router = routers.DefaultRouter()
 router.register(r'users', views.UserViewSet)

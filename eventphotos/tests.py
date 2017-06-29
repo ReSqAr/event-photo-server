@@ -10,7 +10,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 # Create your tests here.
-from wphotos.models import Event, UserAuthenticatedForEvent, Photo, Like
+from eventphotos.models import Event, UserAuthenticatedForEvent, Photo, Like
 
 
 class ApiTest(APITestCase):

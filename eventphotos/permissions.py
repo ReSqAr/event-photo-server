@@ -1,6 +1,6 @@
 from rest_framework import permissions
 
-from wphotos.models import UserAuthenticatedForEvent
+from eventphotos.models import UserAuthenticatedForEvent
 
 
 class IsOwnerOrReadOnly(permissions.BasePermission):

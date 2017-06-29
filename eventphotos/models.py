@@ -16,7 +16,7 @@ from django.utils import timezone
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
 
-from wserver.settings import THUMBNAIL_SIZE, WEB_PHOTO_SIZE
+from eventserver.settings import THUMBNAIL_SIZE, WEB_PHOTO_SIZE
 
 
 # from: http://www.django-rest-framework.org/api-guide/authentication/
@@ -144,7 +144,7 @@ class Photo(models.Model):
             orientation = image._getexif()[274]
         except:
             orientation = 0
-        
+
         if orientation == 3:
             image = image.rotate(180,expand=True)
         elif orientation == 6:

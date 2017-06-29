@@ -10,9 +10,9 @@ from rest_framework.exceptions import ValidationError, PermissionDenied
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
-from wphotos.models import Photo, Like, Event, UserAuthenticatedForEvent
-from wphotos.permissions import IsOwnerOrAuthorisedForEventConstructor
-from wphotos.serializers import UserSerializer, PhotoSerializer, LikeSerializer, EventSerializer, \
+from eventphotos.models import Photo, Like, Event, UserAuthenticatedForEvent
+from eventphotos.permissions import IsOwnerOrAuthorisedForEventConstructor
+from eventphotos.serializers import UserSerializer, PhotoSerializer, LikeSerializer, EventSerializer, \
     UserAuthenticatedForEventSerializer
 
 
