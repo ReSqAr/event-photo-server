@@ -180,9 +180,11 @@ class PhotoViewSet(viewsets.ModelViewSet):
 
         if sort_order is not None:
             if sort_order == 'uploaded':
-                queryset.order_by('-upload_dt')
+                queryset = queryset.order_by('-upload_dt')
+                print("uploaded")
             elif sort_order == 'created':
-                queryset.order_by('-photo_dt')
+                queryset = queryset.order_by('-photo_dt')
+                print("created")
             elif sort_order == 'likes':
                 print("sort_order: likes")
                 queryset = queryset.annotate(Count('like_set'))

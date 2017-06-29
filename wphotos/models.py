@@ -95,7 +95,9 @@ class Photo(models.Model):
         # check md5sum
         self.photo.seek(0)
         local_md5 = self.compute_md5(self.photo)
-        if self.hash_md5.strip() != local_md5:
+        if self.hash_md5 == "!IGNORE!":
+            self.hash_md5 = local_md5
+        elif self.hash_md5.strip() != local_md5:
             raise ValidationError('md5 mismatch: {} != {}'.format(self.hash_md5, local_md5))
         self.photo.seek(0)
 
@@ -133,7 +135,23 @@ class Photo(models.Model):
         from: https://stackoverflow.com/a/43011898/7729124
         """
         image = Image.open(source)
+
+        # scale
         image.thumbnail(size, Image.ANTIALIAS)
+
+        # find exif rotation and rotate
+        try:
+            orientation = image._getexif()[274]
+        except:
+            orientation = 0
+        
+        if orientation == 3:
+            image = image.rotate(180,expand=True)
+        elif orientation == 6:
+            image = image.rotate(270,expand=True)
+        elif orientation == 8:
+            image = image.rotate(90,expand=True)
+
 
         source_name, source_extension = os.path.splitext(source.name)
         source_extension = source_extension.lower()
