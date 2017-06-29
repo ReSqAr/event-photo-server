@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.db.models import Count
 from rest_framework import viewsets, mixins, status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, PermissionDenied
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
@@ -51,6 +51,28 @@ def events_metadata(request):
         }
 
     return Response([pp_event(event) for event in events])
+
+
+@api_view(['GET'])
+@permission_classes((IsAuthenticated,))
+def single_event_metadata(request, **kwargs):
+    user = request.user
+    event_pk = kwargs['event_id']
+    event_pk = int(event_pk)
+
+    try:
+        event = Event.objects.get(pk=event_pk)
+    except:
+        return Response()
+
+    data = {
+            'id': event.pk,
+            'name': event.name,
+            'icon': request.build_absolute_uri(event.icon.url),
+            'has_access': UserAuthenticatedForEvent.is_user_authenticated_for_event(user, event),
+        }
+
+    return Response(data)
 
 
 @api_view(['POST'])

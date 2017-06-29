@@ -132,7 +132,7 @@ class ApiTest(APITestCase):
         admin = User.objects.get(username='admin1')
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + admin.auth_token.key)
 
-        url = reverse('event-names')
+        url = reverse('events-metadata')
         response = self.client.get(url, format='json')
 
         self.assertEqual(len(response.data), initial_event_count)
