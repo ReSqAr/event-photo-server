@@ -186,8 +186,6 @@ class Like(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='like_set')
     dt = models.DateTimeField()
 
-    # TODO: validate that owner is authorised to write to event!
-
     class Meta:
         unique_together = ('photo', 'owner')
         ordering = ['-dt']

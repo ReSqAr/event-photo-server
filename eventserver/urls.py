@@ -37,6 +37,7 @@ urlpatterns = [
         name='auth-user-for-event'),
     url(r'^api/events-metadata/', views.events_metadata, name='events-metadata'),
     url(r'^api/single-event-metadata/(?P<event_id>\d+)', views.single_event_metadata, name='single-event-metadata'),
+    url(r'^api/like-photo/', views.like_photo, name='like-photo'),
 
     url(r'^api/', include(router.urls)),
 

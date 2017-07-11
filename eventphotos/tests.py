@@ -428,7 +428,7 @@ class ApiTest(APITestCase):
         }
         response = self.client.post(url, photo_data, format='multipart')
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(Like.objects.count(), initial_like_count)
 
     def test_like_no_auth(self):
@@ -447,18 +447,21 @@ class ApiTest(APITestCase):
         }
         response = self.client.post(url, photo_data, format='json')
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(Like.objects.count(), initial_like_count)
 
     def test_like(self):
         initial_like_count = Like.objects.count()
 
         # get user
-        user = User.objects.get(username='user3')
+        user = User.objects.get(username='admin1')
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + user.auth_token.key)
 
         # get photo
         photo = Photo.objects.first()
+
+        # auth user
+        UserAuthenticatedForEvent.objects.create(user=user, event=photo.event)
 
         url = reverse('like-list')
         photo_data = {
@@ -480,7 +483,7 @@ class ApiTest(APITestCase):
         initial_like_count = Like.objects.count()
 
         # get user
-        user = User.objects.get(username='user1')
+        user = User.objects.get(username='admin1')
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + user.auth_token.key)
 
         # get photo
@@ -506,7 +509,7 @@ class ApiTest(APITestCase):
         self.assertEqual(response.data['liked_by_current_user'], True)
 
         # get other user
-        user = User.objects.get(username='user3')
+        user = User.objects.get(username='admin3')
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + user.auth_token.key)
 
         # check photo liked_by_current_user
@@ -515,3 +518,177 @@ class ApiTest(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['liked_by_current_user'], False)
+
+    def test_like_unlike_new_photo(self):
+        initial_like_count = Like.objects.count()
+
+        # get user
+        user = User.objects.get(username='user3')
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + user.auth_token.key)
+
+        # get photo
+        photo = Photo.objects.first()
+
+        url = reverse('like-photo')
+        photo_data = {
+            'photo_id': photo.id,
+            'like': False,
+        }
+        response = self.client.post(url, photo_data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Like.objects.count(), initial_like_count)
+
+        # check photo liked_by_current_user
+        url = reverse('photo-detail', kwargs={'pk': photo.pk})
+        response = self.client.get(url, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['liked_by_current_user'], False)
+
+    def test_like_like_new_photo(self):
+        initial_like_count = Like.objects.count()
+
+        # get user
+        user = User.objects.get(username='user3')
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + user.auth_token.key)
+
+        # get photo
+        photo = Photo.objects.first()
+
+        url = reverse('like-photo')
+        photo_data = {
+            'photo_id': photo.id,
+            'like': True,
+        }
+        response = self.client.post(url, photo_data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Like.objects.count(), initial_like_count + 1)
+
+        # check photo liked_by_current_user
+        url = reverse('photo-detail', kwargs={'pk': photo.pk})
+        response = self.client.get(url, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['liked_by_current_user'], True)
+
+    def test_like_not_owner(self):
+        initial_like_count = Like.objects.count()
+
+        # get user
+        user = User.objects.get(username='admin1')
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + user.auth_token.key)
+
+        # get photo
+        photo = Photo.objects.first()
+
+        # create auth
+        UserAuthenticatedForEvent.objects.create(user=user, event=photo.event)
+
+        url = reverse('like-list')
+        photo_data = {
+            'photo': photo.id,
+        }
+        response = self.client.post(url, photo_data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Like.objects.count(), initial_like_count + 1)
+
+        # check photo liked_by_current_user
+        url = reverse('photo-detail', kwargs={'pk': photo.pk})
+        response = self.client.get(url, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['liked_by_current_user'], True)
+
+        # get other user
+        user = User.objects.get(username='admin3')
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + user.auth_token.key)
+
+        # check photo liked_by_current_user
+        url = reverse('photo-detail', kwargs={'pk': photo.pk})
+        response = self.client.get(url, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['liked_by_current_user'], False)
+
+    def test_like_unlike_liked_photo(self):
+        initial_like_count = Like.objects.count()
+
+        # get user
+        user = User.objects.get(username='user3')
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + user.auth_token.key)
+
+        # get photo
+        photo = Photo.objects.first()
+
+        # like it
+        Like.objects.create(owner=user, photo=photo)
+
+        url = reverse('like-photo')
+        photo_data = {
+            'photo_id': photo.id,
+            'like': False,
+        }
+        response = self.client.post(url, photo_data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Like.objects.count(), initial_like_count)
+
+        # check photo liked_by_current_user
+        url = reverse('photo-detail', kwargs={'pk': photo.pk})
+        response = self.client.get(url, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['liked_by_current_user'], False)
+
+    def test_like_like_liked_photo(self):
+        initial_like_count = Like.objects.count()
+
+        # get user
+        user = User.objects.get(username='user3')
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + user.auth_token.key)
+
+        # get photo
+        photo = Photo.objects.first()
+
+        # like it
+        Like.objects.create(owner=user, photo=photo)
+
+        url = reverse('like-photo')
+        photo_data = {
+            'photo_id': photo.id,
+            'like': True,
+        }
+        response = self.client.post(url, photo_data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Like.objects.count(), initial_like_count + 1)
+
+        # check photo liked_by_current_user
+        url = reverse('photo-detail', kwargs={'pk': photo.pk})
+        response = self.client.get(url, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['liked_by_current_user'], True)
+
+    def test_like_unauthenticated_photo(self):
+        initial_like_count = Like.objects.count()
+
+        # get user
+        user = User.objects.get(username='user1')
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + user.auth_token.key)
+
+        # get photo
+        photo = Photo.objects.first()
+
+        url = reverse('like-photo')
+        photo_data = {
+            'photo_id': photo.id,
+            'like': False,
+        }
+        response = self.client.post(url, photo_data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Like.objects.count(), initial_like_count)

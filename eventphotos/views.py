@@ -4,9 +4,9 @@ from random import choice
 
 from django.contrib.auth.models import User
 from django.db.models import Count
-from rest_framework import viewsets, mixins, status
+from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.exceptions import ValidationError, PermissionDenied
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
@@ -108,6 +108,35 @@ def authenticate_user_for_event(request, **kwargs):
                     status=status.HTTP_201_CREATED)
 
 
+@api_view(['POST'])
+@permission_classes((IsAuthenticated,))
+def like_photo(request, **kwargs):
+    user = request.user
+    photo_pk = request.data['photo_id']
+    like = request.data['like']
+
+    photo_pk = int(photo_pk)
+    like = bool(like)
+
+    try:
+        photo = Photo.objects.get(pk=photo_pk)
+    except:
+        raise ValidationError("photo not found")
+
+    if not UserAuthenticatedForEvent.is_user_authenticated_for_event(user, photo.event):
+        raise ValidationError("photo not found")
+
+    is_liked = Like.objects.filter(photo=photo, owner=user).exists()
+
+    if is_liked and not like:
+        # delete like
+        Like.objects.filter(photo=photo, owner=user).delete()
+    elif not is_liked and like:
+        Like.objects.create(photo=photo, owner=user)
+
+    return Response(PhotoSerializer(photo, context={'request': request}).data,
+                    status=status.HTTP_200_OK)
+
 class UserViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows users to be viewed or edited.
@@ -181,12 +210,12 @@ class PhotoViewSet(viewsets.ModelViewSet):
         if sort_order is not None:
             if sort_order == 'uploaded':
                 queryset = queryset.order_by('-upload_dt')
-                print("uploaded")
+                # print("uploaded")
             elif sort_order == 'created':
                 queryset = queryset.order_by('-photo_dt')
-                print("created")
+                #print("created")
             elif sort_order == 'likes':
-                print("sort_order: likes")
+                #print("sort_order: likes")
                 queryset = queryset.annotate(Count('like_set'))
                 queryset = queryset.order_by('-like_set__count')
             else:
@@ -207,7 +236,7 @@ class LikeViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows comments to be viewed or edited.
     """
-    permission_classes = (IsOwnerOrAuthorisedForEventConstructor(lambda x: x.owner, lambda x: x.photo.event),)
+    permission_classes = (IsAdminUser,)
 
     serializer_class = LikeSerializer
 
